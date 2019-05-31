@@ -75,8 +75,13 @@ class Board {
   }
 }
 
+const isReachable = (r, c, piece) => {}
+
+const isLegalMove = (r, c, piece, ownPieces, opponentPieces) => {}
+
 module.exports = {
   Board,
   Square,
-  PieceType
+  PieceType,
+  Piece
 }
