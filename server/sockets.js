@@ -1,4 +1,4 @@
-const Chess = require('./chess')
+const { Square, PieceType, Board, Piece } = require('./chess')
 
 const sleep = ms => {
   return new Promise(resolve => setTimeout(resolve, ms))
@@ -21,6 +21,7 @@ var disconnects = {}
  *
  * 'name': {
  *    players: [String], // id
+ *    pieces: [[Square]] // two arrays of Squares
  * 		turn: 0 // -1 for not started, 0 for white, 1 for black
  * 		board: [[Square]]
  * }
@@ -43,7 +44,34 @@ module.exports = server => {
   })
 
   const updateBoard = (room, playerIndex) => {
-    // TODO: emits an updateBoard to the player
+    /**
+     * {
+     *    r: {
+     *      c: S,
+     *      c: S
+     *    }
+     * }
+     */
+    let observableSquares = {}
+
+    let pieces = room.pieces[playerIndex]
+    pieces.forEach(p => {
+      observableSquares[p.row][p.col] = room.board.cells[p.row][p.col]
+      switch (Math.abs(p.pieceType)) {
+        case PieceType.W_KING:
+          break
+        case PieceType.W_QUEEN:
+          break
+        case PieceType.W_ROOK:
+          break
+        case PieceType.W_BISHOP:
+          break
+        case PieceType.W_KNIGHT:
+          break
+        case PieceType.W_PAWN:
+          break
+      }
+    })
   }
 
   io.on('connection', socket => {
@@ -74,10 +102,21 @@ module.exports = server => {
 
           // start the game
           room.turn = 0
-          room.board = new Chess.Board()
+          room.board = new Board()
 
-          io.to(room.players[0]).emit('startGame')
-          io.to(room.players[1]).emit('startGame')
+          room.pieces = [
+            room.board
+              .slice(0, 2)
+              .flat()
+              .map(s => s.piece),
+            room.board
+              .slice(6, 8)
+              .flat()
+              .map(s => s.piece)
+          ]
+
+          io.to(room.players[0]).emit('startGame', 0)
+          io.to(room.players[1]).emit('startGame', 1)
 
           // update the board
           updateBoard(room, 0)
@@ -90,7 +129,8 @@ module.exports = server => {
         rooms[name] = {
           players: [id],
           turn: -1,
-          board: []
+          board: [],
+          pieces: []
         }
         users[id] = name
         socket.emit('joinRoomSuccess')
