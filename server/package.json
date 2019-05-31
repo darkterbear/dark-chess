@@ -1,0 +1,28 @@
+{
+  "name": "dark-chess-server",
+  "version": "0.0.1",
+  "description": "Backend for an online based game of Dark Chess",
+  "main": "server.js",
+  "scripts": {
+    "test": "node test.js",
+    "start": "pm2 start server.js --name dark-chess-server",
+    "restart": "pm2 restart dark-chess-server",
+    "redeploy": "git reset --hard && git pull -X theirs && pm2 restart dark-chess-server",
+    "deploy": "git reset --hard && git pull -X theirs && pm2 start server.js --name dark-chess-server"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/darkterbear/dark-chess.git"
+  },
+  "author": "Terrance Li",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/darkterbear/dark-chess/issues"
+  },
+  "homepage": "https://github.com/darkterbear/dark-chess#readme",
+  "dependencies": {
+    "express": "^4.16.4",
+    "socket.io": "^2.1.1",
+    "socket.io-client": "^2.1.1"
+  }
+}
