@@ -1,4 +1,5 @@
-const { Square, PieceType, Board, Piece } = require('./chess')
+const Chess = require('./chess')
+const { Square, PieceType, Board, Piece } = Chess
 
 const sleep = ms => {
   return new Promise(resolve => setTimeout(resolve, ms))
@@ -55,23 +56,22 @@ module.exports = server => {
     let observableSquares = {}
 
     let pieces = room.pieces[playerIndex]
-    pieces.forEach(p => {
-      observableSquares[p.row][p.col] = room.board.cells[p.row][p.col]
-      switch (Math.abs(p.pieceType)) {
-        case PieceType.W_KING:
-          break
-        case PieceType.W_QUEEN:
-          break
-        case PieceType.W_ROOK:
-          break
-        case PieceType.W_BISHOP:
-          break
-        case PieceType.W_KNIGHT:
-          break
-        case PieceType.W_PAWN:
-          break
-      }
+    let opponentPieces = room.pieces[1 - playerIndex]
+
+    room.board.cells.forEach(r => {
+      r.forEach(square => {
+        if (
+          pieces.some(p =>
+            Chess.isReachable(square.row, square.col, p, pieces, opponentPieces)
+          )
+        ) {
+          if (!observableSquares[square.row]) observableSquares[square.row] = {}
+          observableSquares[square.row][square.col] = square
+        }
+      })
     })
+
+    io.to(room.players[playerIndex]).emit('updateBoard', observableSquares)
   }
 
   io.on('connection', socket => {
@@ -105,11 +105,11 @@ module.exports = server => {
           room.board = new Board()
 
           room.pieces = [
-            room.board
+            room.board.cells
               .slice(0, 2)
               .flat()
               .map(s => s.piece),
-            room.board
+            room.board.cells
               .slice(6, 8)
               .flat()
               .map(s => s.piece)
@@ -137,24 +137,74 @@ module.exports = server => {
       }
     })
 
+    // play move
+    socket.on('move', ({ origin, target }) => {
+      console.log(origin, target)
+      let roomId = users[id]
+      if (!roomId) return
+      let room = rooms[roomId]
+      if (!room) return
+
+      // check if its the player's turn
+      let turn = room.turn
+      if (room.players[turn] !== id) return
+
+      // check that target and origin are on the board
+      if (target.row < 0 || target.col < 0 || target.row > 7 || target.col > 7)
+        return false
+      if (origin.row < 0 || origin.col < 0 || origin.row > 7 || origin.col > 7)
+        return false
+
+      // check if the move is legal
+      let originSquare = room.board.cells[origin.row][origin.col]
+      if (
+        turn === 0
+          ? originSquare.piece.pieceType <= 0
+          : originSquare.piece.pieceType >= 0
+      )
+        return
+      if (
+        Chess.isLegalMove(
+          target.row,
+          target.col,
+          originSquare.piece,
+          room.pieces[turn],
+          room.pieces[1 - turn]
+        )
+      ) {
+        // make the move
+        room.board.cells[target.row][target.col].piece =
+          room.board.cells[origin.row][origin.col].piece
+        room.board.cells[origin.row][origin.col].piece = undefined
+        room.board.cells[target.row][target.col].piece.row = target.row
+        room.board.cells[target.row][target.col].piece.col = target.col
+
+        // update boards
+        updateBoard(room, 0)
+        updateBoard(room, 1)
+
+        // next player's turn
+        turn = 1 - turn
+        io.to(room.players[turn]).emit('yourTurn')
+      }
+    })
+
     // disconnect
     socket.on('disconnect', () => {
-      const handler = setTimeout(() => {
-        if (!users[id]) return
+      console.log('disconnect')
 
-        const roomId = users[id]
-        const room = rooms[roomId]
-        users[room.players[0]] = null
-        users[room.players[1]] = null
+      if (!users[id]) return
 
-        io.to(room.players[0]).emit('gameEnd')
-        io.to(room.players[1]).emit('gameEnd')
+      const roomId = users[id]
+      const room = rooms[roomId]
+      users[room.players[0]] = null
+      users[room.players[1]] = null
 
-        delete users[id]
-        delete rooms[roomId]
-      }, 3000)
+      io.to(room.players[0]).emit('gameEnd')
+      io.to(room.players[1]).emit('gameEnd')
 
-      disconnects[id] = handler
+      delete users[id]
+      delete rooms[roomId]
     })
   })
 }

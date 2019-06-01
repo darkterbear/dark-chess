@@ -8,51 +8,71 @@ var socket2Id
 var socket3Id
 let roomName = 'test'
 
-socket1.on('id', id => {
-  socket1Id = id
-  console.log(socket1Id)
-})
+// socket1.on('id', id => {
+//   socket1Id = id
+//   console.log(socket1Id)
+// })
 
-socket2.on('id', id => {
-  socket2Id = id
-  console.log(socket2Id)
-})
+// socket2.on('id', id => {
+//   socket2Id = id
+//   console.log(socket2Id)
+// })
 
-socket3.on('id', id => {
-  socket3Id = id
-  console.log(socket3Id)
-})
+// socket3.on('id', id => {
+//   socket3Id = id
+//   console.log(socket3Id)
+// })
 
 // test room joining
-socket1.on('joinRoomSuccess', () => {
-  console.log('s1 joined room')
-})
+// socket1.on('joinRoomSuccess', () => {
+//   console.log('s1 joined room')
+// })
 
-socket2.on('joinRoomSuccess', () => {
-  console.log('s2 joined room')
-})
+// socket2.on('joinRoomSuccess', () => {
+//   console.log('s2 joined room')
+// })
 
-socket3.on('joinRoomSuccess', () => {
-  console.log('s3 joined room')
-})
+// socket3.on('joinRoomSuccess', () => {
+//   console.log('s3 joined room')
+// })
 
-socket1.on('joinRoomFailure', () => {
-  console.log('s1 join failed')
-})
+// socket1.on('joinRoomFailure', () => {
+//   console.log('s1 join failed')
+// })
 
-socket2.on('joinRoomFailure', () => {
-  console.log('s2 join failed')
-})
+// socket2.on('joinRoomFailure', () => {
+//   console.log('s2 join failed')
+// })
 
-socket3.on('joinRoomFailure', () => {
-  console.log('s3 join failed')
-})
+// socket3.on('joinRoomFailure', () => {
+//   console.log('s3 join failed')
+// })
 
 // test startgame
-socket1.on('startGame', () => console.log('s1 start game'))
-socket2.on('startGame', () => console.log('s2 start game'))
-socket3.on('startGame', () => console.log('s3 start game'))
+// socket1.on('startGame', () => console.log('s1 start game'))
+// socket2.on('startGame', () => console.log('s2 start game'))
+// socket3.on('startGame', () => console.log('s3 start game'))
+
+// test updateboard
+// socket1.on('updateBoard', squares => console.log(squares))
+// socket2.on('updateBoard', squares => console.log(squares))
+
+// test yourturn
+socket1.on('yourTurn', () => {
+  console.log('s1 turn')
+  socket1.emit('move', {
+    origin: {
+      row: 1,
+      col: 3
+    },
+    target: {
+      row: 3,
+      col: 4
+    }
+  })
+})
+socket2.on('yourTurn', () => console.log('s2 turn'))
 
 socket1.emit('joinRoom', roomName)
 socket2.emit('joinRoom', roomName)
-socket3.emit('joinRoom', roomName)
+// socket3.emit('joinRoom', roomName)
