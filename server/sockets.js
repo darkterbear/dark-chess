@@ -45,11 +45,11 @@ module.exports = server => {
       })
     )
 
-    let white = DarkChess.foggify(board, 'white')
-    let black = DarkChess.foggify(board, 'black')
+    let white = DarkChess.foggify(board, 'w')
+    let black = DarkChess.foggify(board, 'b')
 
-    io.to(room.players[0]).emit(white)
-    io.to(room.players[1]).emit(black)
+    io.to(room.players[0]).emit('updateBoard', white)
+    io.to(room.players[1]).emit('updateBoard', black)
   }
 
   io.on('connection', socket => {
@@ -116,7 +116,6 @@ module.exports = server => {
       let turn = room.turn
       if (room.players[turn] !== id) return
 
-      // TODO: check if move was successful
       if (room.board.move(move)) {
         updateBoard(room)
 

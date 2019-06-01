@@ -54,8 +54,8 @@ let roomName = 'test'
 // socket3.on('startGame', () => console.log('s3 start game'))
 
 // test updateboard
-// socket1.on('updateBoard', squares => console.log(squares))
-// socket2.on('updateBoard', squares => console.log(squares))
+socket1.on('updateBoard', board => console.log(board))
+socket2.on('updateBoard', board => console.log(board))
 
 // test yourturn
 socket1.on('yourTurn', () => {
