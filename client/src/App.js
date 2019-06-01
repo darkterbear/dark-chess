@@ -49,9 +49,8 @@ export default class App extends React.Component {
   }
 
   onDrop = move => {
-    // TODO: when move, myturn = false
     if (this.state.myTurn) {
-      console.log('emitted move', move.sourceSquare, move.targetSquare)
+      this.setState({ myTurn: false })
       Socket.emit('move', { from: move.sourceSquare, to: move.targetSquare })
     }
   }
