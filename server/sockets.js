@@ -118,6 +118,7 @@ module.exports = server => {
       if (room.board.move(move)) {
         updateBoard(room)
 
+        io.to(room.players[turn]).emit('turnComplete')
         room.turn = 1 - turn
         io.to(room.players[room.turn]).emit('yourTurn')
       }

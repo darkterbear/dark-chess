@@ -36,6 +36,8 @@ export default class App extends React.Component {
     })
 
     Socket.on('startGame', color => this.setState({ myColor: color }))
+
+    Socket.on('turnComplete', () => this.setState({ myTurn: false }))
   }
 
   handleRoomNameChange = e => {
@@ -50,7 +52,6 @@ export default class App extends React.Component {
 
   onDrop = move => {
     if (this.state.myTurn) {
-      this.setState({ myTurn: false })
       Socket.emit('move', { from: move.sourceSquare, to: move.targetSquare })
     }
   }
