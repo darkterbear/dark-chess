@@ -1,0 +1,28 @@
+html,
+body,
+#root,
+#container {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+html #container,
+body #container,
+#root #container,
+#container #container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+h1 {
+  margin: 0 !important;
+}
+
+h2 {
+  margin: 0;
+}
+
+/*# sourceMappingURL=styles.css.map */

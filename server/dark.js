@@ -105,13 +105,11 @@ const isReachable = (r, c, piece, ownPieces, opponentPieces) => {
  */
 const foggify = (board, color) => {
   // let boardCopy = JSON.parse(JSON.stringify(board))
-  let foggedBoard = Array.from(
-    { length: 8 },
-    () =>
-      Array.from({ length: 8 }, () => ({
-        type: 'fog'
-      }))
-    // Array.from({ length: 8 }, () => null)
+  let foggedBoard = Array.from({ length: 8 }, () =>
+    // Array.from({ length: 8 }, () => ({
+    //   type: 'fog'
+    // }))
+    Array.from({ length: 8 }, () => null)
   )
   let ownPieces = []
   let opponentPieces = []

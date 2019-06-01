@@ -59,8 +59,8 @@ module.exports = server => {
       id = hat(8)
     }
 
-    // send id to client
-    socket.emit('id', id)
+    // add socket to room of its id
+    // socket.emit('id', id)
     socket.join(id)
     users[id] = null
 
@@ -83,8 +83,8 @@ module.exports = server => {
           room.turn = 0
           room.board = new Chess()
 
-          io.to(room.players[0]).emit('startGame', 0)
-          io.to(room.players[1]).emit('startGame', 1)
+          io.to(room.players[0]).emit('startGame', 'w')
+          io.to(room.players[1]).emit('startGame', 'b')
 
           // update the board
           updateBoard(room)
@@ -115,7 +115,6 @@ module.exports = server => {
       // check if its the player's turn
       let turn = room.turn
       if (room.players[turn] !== id) return
-
       if (room.board.move(move)) {
         updateBoard(room)
 
