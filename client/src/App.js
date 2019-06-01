@@ -1,6 +1,5 @@
 import React from 'react'
 import Chessboard from 'chessboardjsx'
-import 'normalize.css'
 import Socket from './Socket'
 
 const coordsToSquare = (r, c) => {
