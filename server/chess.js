@@ -249,11 +249,33 @@ const isReachable = (r, c, piece, ownPieces, opponentPieces) => {
  * @param {[Piece]} opponentPieces Opponent's pieces
  */
 const isLegalMove = (r, c, piece, ownPieces, opponentPieces) => {
-	// in check?
-	// check for moving into check (or pinning)
-	// override for castling
-	// override for enpassant
+	let originalRow = piece.row
+	let originalCol = piece.col
+
+	// check if in check after move
+	piece.row = r
+	piece.col = c
+	let king = ownPieces.filter(
+		p => Math.abs(p.pieceType) === PieceType.W_KING
+	)[0]
+	if (
+		opponentPieces.some(p =>
+			isReachable(king.row, king.col, p, opponentPieces, ownPieces)
+		)
+	)
+		return false
+	piece.row = originalRow
+	piece.col = originalCol
+
+	// TODO: override for castling
+	// can't castle if king or rook as moved already
+	// can't castle if currently in check
+	// can't casn't through a check
+	// TODO: override for enpassant
+
 	// check reachable
+	if (isReachable(r, c, piece, ownPieces, opponentPieces)) return true
+	return false
 }
 
 module.exports = {
