@@ -60,17 +60,9 @@ let roomName = 'test'
 // test yourturn
 socket1.on('yourTurn', () => {
   console.log('s1 turn')
-  socket1.emit('move', {
-    origin: {
-      row: 1,
-      col: 3
-    },
-    target: {
-      row: 3,
-      col: 4
-    }
-  })
+  socket1.emit('move', 'e4')
 })
+
 socket2.on('yourTurn', () => console.log('s2 turn'))
 
 socket1.emit('joinRoom', roomName)

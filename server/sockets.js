@@ -1,5 +1,5 @@
-const Chess = require('./chess')
-const { Square, PieceType, Board, Piece } = Chess
+const Chess = require('chess.js').Chess
+const DarkChess = require('./dark')
 
 const sleep = ms => {
   return new Promise(resolve => setTimeout(resolve, ms))
@@ -13,18 +13,12 @@ const sleep = ms => {
 var users = {}
 
 /**
- * A dictionary of pending setTimeout handlers for disconnecting users
- */
-var disconnects = {}
-
-/**
  * Room schema
  *
  * 'name': {
  *    players: [String], // id
- *    pieces: [[Square]] // two arrays of Squares
  * 		turn: 0 // -1 for not started, 0 for white, 1 for black
- * 		board: [[Square]]
+ * 		board: Chess
  * }
  */
 var rooms = {}
@@ -44,34 +38,18 @@ module.exports = server => {
     origins: '*:*'
   })
 
-  const updateBoard = (room, playerIndex) => {
-    /**
-     * {
-     *    r: {
-     *      c: S,
-     *      c: S
-     *    }
-     * }
-     */
-    let observableSquares = {}
-
-    let pieces = room.pieces[playerIndex]
-    let opponentPieces = room.pieces[1 - playerIndex]
-
-    room.board.cells.forEach(r => {
-      r.forEach(square => {
-        if (
-          pieces.some(p =>
-            Chess.isReachable(square.row, square.col, p, pieces, opponentPieces)
-          )
-        ) {
-          if (!observableSquares[square.row]) observableSquares[square.row] = {}
-          observableSquares[square.row][square.col] = square
-        }
+  const updateBoard = room => {
+    let board = Array.from({ length: 8 }, (_, r) =>
+      Array.from({ length: 8 }, (_, c) => {
+        return room.board.get(DarkChess.coordsToSquare(r, c))
       })
-    })
+    )
 
-    io.to(room.players[playerIndex]).emit('updateBoard', observableSquares)
+    let white = DarkChess.foggify(board, 'white')
+    let black = DarkChess.foggify(board, 'black')
+
+    io.to(room.players[0]).emit(white)
+    io.to(room.players[1]).emit(black)
   }
 
   io.on('connection', socket => {
@@ -91,6 +69,7 @@ module.exports = server => {
       // check if room name exists already
       if (rooms[name]) {
         let room = rooms[name]
+
         if (room.players.length >= 2) socket.emit('joinRoomFailure')
         else if (room.players.length === 1) {
           // decide who is white and who is black
@@ -102,44 +81,32 @@ module.exports = server => {
 
           // start the game
           room.turn = 0
-          room.board = new Board()
-
-          room.pieces = [
-            room.board.cells
-              .slice(0, 2)
-              .flat()
-              .map(s => s.piece),
-            room.board.cells
-              .slice(6, 8)
-              .flat()
-              .map(s => s.piece)
-          ]
+          room.board = new Chess()
 
           io.to(room.players[0]).emit('startGame', 0)
           io.to(room.players[1]).emit('startGame', 1)
 
           // update the board
-          updateBoard(room, 0)
-          updateBoard(room, 1)
+          updateBoard(room)
 
           // kickstart the turn
           io.to(room.players[0]).emit('yourTurn')
         }
       } else {
+        // create a room
         rooms[name] = {
           players: [id],
           turn: -1,
-          board: [],
-          pieces: []
+          board: null
         }
+
         users[id] = name
         socket.emit('joinRoomSuccess')
       }
     })
 
     // play move
-    socket.on('move', ({ origin, target }) => {
-      console.log(origin, target)
+    socket.on('move', move => {
       let roomId = users[id]
       if (!roomId) return
       let room = rooms[roomId]
@@ -149,50 +116,17 @@ module.exports = server => {
       let turn = room.turn
       if (room.players[turn] !== id) return
 
-      // check that target and origin are on the board
-      if (target.row < 0 || target.col < 0 || target.row > 7 || target.col > 7)
-        return false
-      if (origin.row < 0 || origin.col < 0 || origin.row > 7 || origin.col > 7)
-        return false
+      // TODO: check if move was successful
+      if (room.board.move(move)) {
+        updateBoard(room)
 
-      // check if the move is legal
-      let originSquare = room.board.cells[origin.row][origin.col]
-      if (
-        turn === 0
-          ? originSquare.piece.pieceType <= 0
-          : originSquare.piece.pieceType >= 0
-      )
-        return
-      if (
-        Chess.isLegalMove(
-          target.row,
-          target.col,
-          originSquare.piece,
-          room.pieces[turn],
-          room.pieces[1 - turn]
-        )
-      ) {
-        // make the move
-        room.board.cells[target.row][target.col].piece =
-          room.board.cells[origin.row][origin.col].piece
-        room.board.cells[origin.row][origin.col].piece = undefined
-        room.board.cells[target.row][target.col].piece.row = target.row
-        room.board.cells[target.row][target.col].piece.col = target.col
-
-        // update boards
-        updateBoard(room, 0)
-        updateBoard(room, 1)
-
-        // next player's turn
-        turn = 1 - turn
-        io.to(room.players[turn]).emit('yourTurn')
+        room.turn = 1 - turn
+        io.to(room.players[room.turn]).emit('yourTurn')
       }
     })
 
     // disconnect
     socket.on('disconnect', () => {
-      console.log('disconnect')
-
       if (!users[id]) return
 
       const roomId = users[id]
