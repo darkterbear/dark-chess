@@ -28,6 +28,7 @@ export default class App extends React.Component {
           }
         })
       })
+      console.log(newPosition)
       this.setState({ position: newPosition })
     })
 
@@ -57,6 +58,7 @@ export default class App extends React.Component {
   }
 
   render() {
+    console.log(this.state.position)
     return (
       <div id='container'>
         <h1>dark chess</h1>
